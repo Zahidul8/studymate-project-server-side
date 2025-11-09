@@ -39,6 +39,12 @@ async function run() {
         const result = await cursor.toArray();
         res.send(result);
     })
+    app.get('/reviewPartner', async(req, res) => {
+         const cursor = partnersCollection.find().limit(3);
+        const result = await cursor.toArray();
+        res.send(result);
+
+    })
 
     app.get('/partners/:id', async(req, res) => {
         const id = req.params.id;
