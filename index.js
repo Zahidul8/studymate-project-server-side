@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -34,9 +34,16 @@ async function run() {
 
 
 
-    app.get('/partners', async(req, res) => {
-        const cursor = partnersCollection.find();
+    app.get('/topPartners', async(req, res) => {
+        const cursor = partnersCollection.find().sort({rating: -1}).limit(6);
         const result = await cursor.toArray();
+        res.send(result);
+    })
+
+    app.get('/partners/:id', async(req, res) => {
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)};
+        const result = await partnersCollection.findOne(query);
         res.send(result);
     })
 
