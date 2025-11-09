@@ -34,6 +34,11 @@ async function run() {
 
 
 
+    app.get('/partners', async(req, res) => {
+      const cursor = partnersCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
     app.get('/topPartners', async(req, res) => {
         const cursor = partnersCollection.find().sort({rating: -1}).limit(6);
         const result = await cursor.toArray();
