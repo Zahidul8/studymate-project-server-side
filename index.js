@@ -28,6 +28,24 @@ async function run() {
     await client.connect();
 
 
+    const db = client.db('studymate-partner');
+    const partnersCollection = db.collection('partners')
+
+
+
+
+    app.get('/partners', async(req, res) => {
+        const cursor = partnersCollection.find();
+        const result = await cursor.toArray();
+        res.send(result);
+    })
+
+    app.post('/partners', async(req, res) => {
+        const data = req.body;
+        const result = await partnersCollection.insertOne(data);
+        res.send(result);
+    })
+
 
 
 
