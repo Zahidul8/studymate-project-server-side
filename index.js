@@ -50,6 +50,13 @@ async function run() {
         res.send(result);
 
     })
+    app.get('/search', async(req, res) => {
+       const searchText = req.query.search;
+      const query = {subject: {$regex: searchText, $options: 'i'}}
+      const cursor = partnersCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    })
 
     app.get('/partners/:id', async(req, res) => {
         const id = req.params.id;
