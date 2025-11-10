@@ -89,6 +89,16 @@ async function run() {
 
     // partner count apis 
 
+    app.get('/partnerCount', async (req, res) => {
+      const email = req.query.email;
+      const query = {requesterEmail: email};
+      const cursor =partnerCountCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+
+
+    })
+
     app.post('/partnerCount', async(req, res) => {
       const data = req.body;
       const result = await partnerCountCollection.insertOne(data);
