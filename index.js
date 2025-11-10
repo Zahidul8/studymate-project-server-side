@@ -9,7 +9,7 @@ app.use(cors())
 app.use(express.json());
 
 app.get('/', (req, res) => {
-    res.send('server is running')
+  res.send('server is running')
 })
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.v0yodsg.mongodb.net/?appName=Cluster0`;
@@ -24,7 +24,7 @@ const client = new MongoClient(uri, {
 });
 async function run() {
   try {
-   
+
     // await client.connect();
 
 
@@ -35,80 +35,98 @@ async function run() {
 
 
 
-    app.get('/partners', async(req, res) => {
+    app.get('/partners', async (req, res) => {
       const cursor = partnersCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     })
-    app.get('/topPartners', async(req, res) => {
-        const cursor = partnersCollection.find().sort({rating: -1}).limit(6);
-        const result = await cursor.toArray();
-        res.send(result);
+    app.get('/topPartners', async (req, res) => {
+      const cursor = partnersCollection.find().sort({ rating: -1 }).limit(6);
+      const result = await cursor.toArray();
+      res.send(result);
     })
-    app.get('/reviewPartner', async(req, res) => {
-         const cursor = partnersCollection.find().limit(3);
-        const result = await cursor.toArray();
-        res.send(result);
+    app.get('/reviewPartner', async (req, res) => {
+      const cursor = partnersCollection.find().limit(3);
+      const result = await cursor.toArray();
+      res.send(result);
 
     })
-    app.get('/search', async(req, res) => {
-       const searchText = req.query.search;
-      const query = {subject: {$regex: searchText, $options: 'i'}}
+    app.get('/search', async (req, res) => {
+      const searchText = req.query.search;
+      const query = { subject: { $regex: searchText, $options: 'i' } }
       const cursor = partnersCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);
     })
 
-    app.get('/partners/:id', async(req, res) => {
-        const id = req.params.id;
-        const query = {_id: new ObjectId(id)};
-        const result = await partnersCollection.findOne(query);
-        res.send(result);
+    app.get('/partners/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await partnersCollection.findOne(query);
+      res.send(result);
     })
 
     app.patch('/partners/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
-      const update = {
-        $inc: {  
-        patnerCount : 1
-            
+      const { requesterEmail, email } = req.body;
+      const filter = { email: email, requesterEmail: requesterEmail };
+      const existingpartner = await partnerCountCollection.findOne(filter);
+      const query = { _id: new ObjectId(id) };
+    
+      if (existingpartner) {
+        return res.status(400).json({ message: "You have already sent a request to this partner." });
+
+      } else {
+          const update = {
+        $inc: {
+          patnerCount: 1
+
         }
       }
-      const partnerCount = await partnersCollection.updateOne(query, update)
+         const partnerCount = await partnersCollection.updateOne(query, update)
       res.send(partnerCount);
+      }
+
+     
 
 
     })
 
-    app.post('/partners', async(req, res) => {
-        const data = req.body;
-        const result = await partnersCollection.insertOne(data);
-        res.send(result);
+    app.post('/partners', async (req, res) => {
+      const data = req.body;
+      const result = await partnersCollection.insertOne(data);
+      res.send(result);
     })
 
     // partner count apis 
 
     app.get('/partnerCount', async (req, res) => {
       const email = req.query.email;
-      const query = {requesterEmail: email};
-      const cursor =partnerCountCollection.find(query);
+      const query = { requesterEmail: email };
+      const cursor = partnerCountCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);
 
 
     })
 
-    app.post('/partnerCount', async(req, res) => {
+    app.post('/partnerCount', async (req, res) => {
       const data = req.body;
-      const result = await partnerCountCollection.insertOne(data);
-      res.send(result);
+      const query = { email: req.body.email, requesterEmail: req.body.requesterEmail };
+      const existingpartner = await partnerCountCollection.findOne(query);
+      if (existingpartner) {
+        return res.status(400).json({ message: "You have already sent a request to this partner." });
+      } else {
+        const result = await partnerCountCollection.insertOne(data);
+        res.send(result);
+      }
+
     })
 
-    app.patch('/partnerCount/:id', async(req, res) => {
+    app.patch('/partnerCount/:id', async (req, res) => {
       const data = req.body;
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const update = {
         $set: {
           subject: data.subject,
@@ -121,9 +139,9 @@ async function run() {
 
     })
 
-    app.delete('/partnerCount/:id', async(req, res) => {
+    app.delete('/partnerCount/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await partnerCountCollection.deleteOne(query);
       res.send(result);
 
@@ -133,11 +151,11 @@ async function run() {
 
 
 
-    
+
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
-   
+
   }
 }
 run().catch(console.dir);
@@ -145,6 +163,6 @@ run().catch(console.dir);
 
 
 app.listen(port, () => {
-    console.log(`Server is running ${port}`);
-    
+  console.log(`Server is running ${port}`);
+
 })
