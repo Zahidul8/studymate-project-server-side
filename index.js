@@ -25,11 +25,12 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
    
-    await client.connect();
+    // await client.connect();
 
 
     const db = client.db('studymate-partner');
-    const partnersCollection = db.collection('partners')
+    const partnersCollection = db.collection('partners');
+    const partnerCountCollection = db.collection('partnerCount')
 
 
 
@@ -65,10 +66,33 @@ async function run() {
         res.send(result);
     })
 
+    app.patch('/partners/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const update = {
+        $inc: {  
+        patnerCount : 1
+            
+        }
+      }
+      const partnerCount = await partnersCollection.updateOne(query, update)
+      res.send(partnerCount);
+
+
+    })
+
     app.post('/partners', async(req, res) => {
         const data = req.body;
         const result = await partnersCollection.insertOne(data);
         res.send(result);
+    })
+
+    // partner count apis 
+
+    app.post('/partnerCount', async(req, res) => {
+      const data = req.body;
+      const result = await partnerCountCollection.insertOne(data);
+      res.send(result);
     })
 
 
@@ -76,7 +100,7 @@ async function run() {
 
 
     
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
    
