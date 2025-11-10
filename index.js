@@ -105,6 +105,22 @@ async function run() {
       res.send(result);
     })
 
+    app.patch('/partnerCount/:id', async(req, res) => {
+      const data = req.body;
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const update = {
+        $set: {
+          subject: data.subject,
+          studyMode: data.studyMode
+        }
+      }
+
+      const result = await partnerCountCollection.updateOne(query, update)
+      res.send(result);
+
+    })
+
     app.delete('/partnerCount/:id', async(req, res) => {
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
