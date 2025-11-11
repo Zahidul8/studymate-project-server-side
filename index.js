@@ -5,8 +5,30 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// middleware 
+
 app.use(cors())
 app.use(express.json());
+
+
+const verifyFireBaseToken = (req, res, next) => {
+
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+     return res.status(401).send({ message: 'unauthorized access' });
+  }
+
+  const token = authorization.split(' ')[1];
+  if (!token) {
+    return res.status(401).send({ message: 'unauthorized access' });
+    
+  }
+  
+  next();
+}
+
+
+
 
 app.get('/', (req, res) => {
   res.send('server is running')
@@ -87,14 +109,14 @@ async function run() {
       res.send(result);
     })
 
-    app.get('/partners/:id', async (req, res) => {
+    app.get('/partners/:id',verifyFireBaseToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await partnersCollection.findOne(query);
       res.send(result);
     })
 
-    app.patch('/partners/:id', async (req, res) => {
+    app.patch('/partners/:id',verifyFireBaseToken, async (req, res) => {
       const id = req.params.id;
       const { requesterEmail, email } = req.body;
       const filter = { email: email, requesterEmail: requesterEmail };
@@ -120,7 +142,8 @@ async function run() {
 
     })
 
-    app.post('/partners', async (req, res) => {
+    app.post('/partners', verifyFireBaseToken, async (req, res) => {
+      
       const data = req.body;
       const result = await partnersCollection.insertOne(data);
       res.send(result);
@@ -128,7 +151,7 @@ async function run() {
 
     // partner count apis 
 
-    app.get('/partnerCount', async (req, res) => {
+    app.get('/partnerCount', verifyFireBaseToken, async (req, res) => {
       const email = req.query.email;
       const query = { requesterEmail: email };
       const cursor = partnerCountCollection.find(query);
@@ -138,7 +161,7 @@ async function run() {
 
     })
 
-    app.post('/partnerCount', async (req, res) => {
+    app.post('/partnerCount',verifyFireBaseToken, async (req, res) => {
       const data = req.body;
       const query = { email: req.body.email, requesterEmail: req.body.requesterEmail };
       const existingpartner = await partnerCountCollection.findOne(query);
@@ -151,7 +174,7 @@ async function run() {
 
     })
 
-    app.patch('/partnerCount/:id', async (req, res) => {
+    app.patch('/partnerCount/:id',verifyFireBaseToken, async (req, res) => {
       const data = req.body;
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -167,7 +190,7 @@ async function run() {
 
     })
 
-    app.delete('/partnerCount/:id', async (req, res) => {
+    app.delete('/partnerCount/:id',verifyFireBaseToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await partnerCountCollection.deleteOne(query);
