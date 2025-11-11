@@ -51,11 +51,39 @@ async function run() {
       res.send(result);
 
     })
+    // sorting data
     app.get('/search', async (req, res) => {
       const searchText = req.query.search;
+      const sortedOrder = req.query.sort;
       const query = { subject: { $regex: searchText, $options: 'i' } }
-      const cursor = partnersCollection.find(query);
-      const result = await cursor.toArray();
+      
+      const order = [
+        {$match: query},
+        {
+          $addFields: {
+            sortValue: {
+              $cond: [
+                {$eq: ['$experienceLevel', 'Beginner']}, 1,
+                {$cond: [
+                   {$eq: ['$experienceLevel', 'Intermediate']}, 2,
+                   {$cond: [
+                     {$eq: ['$experienceLevel', 'Advanced']}, 3,
+                     0
+                   ]}
+                ]}
+              ]
+            }
+          }
+        }
+      ];
+
+      if (sortedOrder === 'asc') {
+        order.push({$sort: {sortValue: 1}});
+      } else if (sortedOrder === 'desc') {
+        order.push({$sort: {sortValue: -1}})
+      }
+
+      const result = await partnersCollection.aggregate(order).toArray();
       res.send(result);
     })
 
